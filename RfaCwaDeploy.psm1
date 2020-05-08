@@ -89,14 +89,21 @@ function Test-LtInstall {
 function Install-RfaCwaAgent {
 
     <#
+    .SYNOPSIS
+    Installs the RFA Automate agent
     .DESCRIPTION
     Checks the local system for the Automate agent and verifies if the agent belongs to RFA and not some other MSP. (Re-) installs as needed. Also ensures the agent is checking in after install. 
-
+    .PARAMETER NoWait
+    Will not pause for 90 seconds after installing (meant for users to review result)
     .NOTES
     AUTHOR: Tony Pagliaro (RFA) tpagliaro@rfa.com
     Date: 2019/12/13
     #>
 
+    param(
+        # Will not pause for 90 seconds after installing (meant for users to review result)
+        [switch]$NoWait
+    )
     
     Confirm-RequiresAdmin
 
@@ -164,7 +171,7 @@ function Install-RfaCwaAgent {
 
         } Finally {
             
-            Start-Sleep 90
+            if ( -not $NoWait ) { Start-Sleep 90 }
 
         }
 
