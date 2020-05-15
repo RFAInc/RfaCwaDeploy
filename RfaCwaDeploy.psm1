@@ -1,6 +1,3 @@
-#v0.1.0.6
-
-
 # Global Variables
 $global:ltposhURL = 'https://raw.githubusercontent.com/LabtechConsulting/LabTech-Powershell-Module/master/LabTech.psm1'
 $global:RfaAutomateServer='https://automate.rfa.com'
@@ -29,7 +26,7 @@ function Confirm-RequiresAdmin {
 
     If (-NOT 
         ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()
-            ).IsInRole(`
+            ).IsInRole(
                 [Security.Principal.WindowsBuiltInRole] "Administrator"
             )
         )
@@ -182,7 +179,6 @@ function Install-RfaCwaAgent {
     if (Test-LtInstall -Quiet) {
 
         Write-Output "SUCCESS: The Automate Agent was successfully installed."
-        Exit 0
 
     } else {
 
