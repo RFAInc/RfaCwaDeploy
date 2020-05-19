@@ -90,6 +90,8 @@ function Install-RfaCwaAgent {
     Installs the RFA Automate agent
     .DESCRIPTION
     Checks the local system for the Automate agent and verifies if the agent belongs to RFA and not some other MSP. (Re-) installs as needed. Also ensures the agent is checking in after install. 
+    .PARAMETER LocationID
+    Location ID as a number
     .PARAMETER NoWait
     Will not pause for 90 seconds after installing (meant for users to review result)
     .NOTES
@@ -99,6 +101,7 @@ function Install-RfaCwaAgent {
 
     param(
         # Location ID as a number
+        [Parameter(Position=0)]
         [int]$LocationID=1,
         
         # Will not pause for 90 seconds after installing (meant for users to review result)
