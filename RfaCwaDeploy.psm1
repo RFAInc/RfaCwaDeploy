@@ -98,15 +98,14 @@ function Install-RfaCwaAgent {
     #>
 
     param(
+        # Location ID as a number
+        [int]$LocationID=1,
+        
         # Will not pause for 90 seconds after installing (meant for users to review result)
         [switch]$NoWait
     )
     
     Confirm-RequiresAdmin
-
-    # User needs to set this variable manually (param with if statement is not working)
-    $LocationID = if ($LocationID -gt 0) {$LocationID} else {1}
-
 
     $ltposhURL = $global:ltposhURL
     $RfaAutomateServer = $global:RfaAutomateServer
