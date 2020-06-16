@@ -142,7 +142,7 @@ function Install-RfaCwaAgent {
         
             # Already installed, exit no issues
             Write-Output "PASSED: The Automate Agent is already installed."
-            exit 0
+            if ( -not $NoWait ) { Start-Sleep 15 }
         
         } else {
         
@@ -200,11 +200,13 @@ function Install-RfaCwaAgent {
     if (Test-LtInstall -Quiet) {
 
         Write-Output "SUCCESS: The Automate Agent was successfully installed."
+        if ( -not $NoWait ) { Start-Sleep 5 }
 
     } else {
 
         Write-Output ($Error.Exception.Message)
         Write-Output (Test-LtInstall | Format-List | Out-String)
+        if ( -not $NoWait ) { Start-Sleep 5 }
         Throw "FAILURE: The Automate Agent could not be installed or is not checking in after a minute."
 
     }
