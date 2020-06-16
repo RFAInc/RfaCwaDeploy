@@ -99,6 +99,7 @@ function Install-RfaCwaAgent {
     Date: 2019/12/13
     #>
 
+    [CmdletBinding()]
     param(
         # Location ID as a number
         [Parameter(Position=0)]
@@ -108,6 +109,9 @@ function Install-RfaCwaAgent {
         [switch]$NoWait
     )
     
+    $vMsg = "Testing current session to ensure we are running as admin."
+    Write-Verbose $vMsg
+    Write-Debug $vMsg
     Confirm-RequiresAdmin
 
     $ltposhURL = $global:ltposhURL
@@ -125,9 +129,15 @@ function Install-RfaCwaAgent {
 
 
     # Check for existing install
+    $vMsg = "Testing $($env:COMPUTERNAME) for existing install."
+    Write-Verbose $vMsg
+    Write-Debug $vMsg
     if (Test-LtInstall -Generic -Quiet) {
 
         # Test is the agent is checking into correct server/location
+        $vMsg = "Checking if current install on $($env:COMPUTERNAME) points to $($global:RfaAutomateServer)."
+        Write-Verbose $vMsg
+        Write-Debug $vMsg
         if (Test-LtInstall -Quiet) {
         
             # Already installed, exit no issues
@@ -151,9 +161,12 @@ function Install-RfaCwaAgent {
     # Remove if required
     if ($UninstallRequired) {
 
+        $vMsg = "Removing install on $($env:COMPUTERNAME)."
+        Write-Verbose $vMsg
+        Write-Debug $vMsg
         Uninstall-LTService -Server $Server -Force
         Start-Sleep 60
-
+        
         $InstallRequired = $true
 
     }
@@ -162,10 +175,16 @@ function Install-RfaCwaAgent {
 
         Try{
 
+            $vMsg = "Installing on $($env:COMPUTERNAME)."
+            Write-Verbose $vMsg
+            Write-Debug $vMsg
             Install-LTService @InstallSplat -ea stop
 
         } Catch {
 
+            $vMsg = "Retrying install on $($env:COMPUTERNAME), skipping .Net validation."
+            Write-Verbose $vMsg
+            Write-Debug $vMsg
             Install-LTService @InstallSplat -SkipDotNet
 
         } Finally {
