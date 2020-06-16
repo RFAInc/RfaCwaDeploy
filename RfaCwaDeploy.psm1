@@ -63,9 +63,9 @@ function Test-LtInstall {
         
         # Test the info vs the conditions
         
-        if (-not $ServerIs -like $ServerShouldBeLike) {$TestPass = $false}
-        if (-not $LocationIs -eq $LocationShouldBe) {$TestPass = $false}
-        if (-not $LastContactIs -ge $LastContactShouldBeGreaterThan) {$TestPass = $false}
+        if (-not ($ServerIs -like $ServerShouldBeLike)) {$TestPass = $false}
+        if (-not ($LocationIs -eq $LocationShouldBe)) {$TestPass = $false}
+        if (-not ($LastContactIs -ge $LastContactShouldBeGreaterThan)) {$TestPass = $false}
     
     }
     
