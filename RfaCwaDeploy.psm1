@@ -121,7 +121,7 @@ function Install-RfaCwaAgent {
     $InstallSplat = @{
 
         Server=$RfaAutomateServer
-        ServerPassword='+KuQQJbctLbr7IrXfLCLcg=='
+        ServerPassword='y[K9knLJc2]QcExf'
         Hide=$true
         LocationID=$LocationID
 
