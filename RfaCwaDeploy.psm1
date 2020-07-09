@@ -2,8 +2,17 @@
 $global:ltposhURL = 'https://raw.githubusercontent.com/LabtechConsulting/LabTech-Powershell-Module/master/LabTech.psm1'
 $global:RfaAutomateServer='https://automate.rfa.com'
 
-# Load external functions
-Invoke-Expression ((new-object Net.WebClient).DownloadString($ltposhURL))
+# Load other modules
+$web = New-Object Net.WebClient
+$OtherModules = @(
+    $ltposhURL
+    'https://raw.githubusercontent.com/tonypags/PsWinAdmin/master/Get-RegistryValueData.ps1'
+)
+Foreach ($uri in $OtherModules) {
+    $web.DownloadString($uri) | Invoke-Expression
+}
+$web.Dispose | Out-Null
+
 
 function Get-AdEnabledComputers {
 
@@ -61,6 +70,10 @@ function Confirm-RequiresAdmin {
 
 
 function Test-LtInstall {
+    <#
+    .SYNOPSIS
+    Tests the local machine for installation and functionality.
+    #>
     param (
         # Set the "pass" conditions
         $ServerShouldBeLike = '*automate.rfa.com*',
@@ -236,3 +249,57 @@ function Install-RfaCwaAgent {
 
 }# END function Install-RfaCwaAgent
 
+function Test-LtRemoteRegistry {
+    <#
+    .SYNOPSIS
+    Checks the remote computer for existing config.
+    .DESCRIPTION
+    Does not test as deeply as Test-LtInstall, meant for pre-check after a Test-Connection passes. Useful if WinRM is disabled.
+    .INPUTS
+    This function consumes ComputerName property from the pipeline.
+    .OUTPUTS
+    This function outputs a custom object to the pipeline with the computername, MAC, ClientID, LastContact, and ServerAddress.
+    #>
+    [CmdletBinding()]
+    Param(
+        # The name of the remote computer
+        [Parameter(Mandatory=$true)]
+        [string[]]
+        $ComputerName
+    )
+
+    Begin {
+        $KeyPath = 'SOFTWARE\LabTech\Service'
+        $Values = @(
+            'Server Address'
+            'LastSuccessStatus'
+            'MAC'
+            'ClientID'
+        )
+    }
+
+    Process {
+        Foreach ($Computer in $ComputerName) {
+            $RegSplat = @{
+                ComputerName = $Computer
+                RegistryHive = 'LocalMachine'
+                RegistryKeyPath = $KeyPath
+                Value = $null
+                ErrorAction = 'SilentlyContinue'
+            }
+
+            Foreach ($Value in $Values) {
+                $RegSplat.Set_Item('Value',$Value)
+                Get-RegistryValueData @RegSplat | New-Variable -Name ($Value.Replace(' ','')) -Force
+            }
+
+            [pscustomobject]@{
+                ComputerName = $Computer
+                ServerAddress = $ServerAddress.RegistryValueData
+                LastContact = $LastSuccessStatus.RegistryValueData
+                MAC = $MAC.RegistryValueData
+                ClientID = $ClientID.RegistryValueData
+            }
+        }
+    }
+}
