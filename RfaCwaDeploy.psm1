@@ -5,7 +5,30 @@ $global:RfaAutomateServer='https://automate.rfa.com'
 # Load external functions
 Invoke-Expression ((new-object Net.WebClient).DownloadString($ltposhURL))
 
+function Get-AdEnabledComputers {
 
+    <#
+    .SYNOPSIS
+    Returns a list of computernames found in AD and not disabled.
+    .DESCRIPTION
+    Returns a list of computernames found in AD and not disabled.
+    #>
+
+    # Check and load module
+    $ModuleLoaded = Get-Module -Name ActiveDiretory
+    $Module = Get-Module -ListAvailable -Name ActiveDiretory
+    if ($Module) {
+        if ($ModuleLoaded) {} else {
+            Import-Module ActiveDiretory
+        }
+    } else {
+        Write-Error "Rerun this script on a DC or a device with RSAT installed."
+    }
+
+    # Pull list of enabled computers and return to pipeline
+    Get-AdComputer -Filter * | Where-Object {$_.Enabled} | Select-Object -ExpandProperty Name
+
+}
 
 function Confirm-RequiresAdmin {
 
