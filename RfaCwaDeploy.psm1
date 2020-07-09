@@ -35,7 +35,8 @@ function Get-AdEnabledComputers {
     }
 
     # Pull list of enabled computers and return to pipeline
-    Get-AdComputer -Filter * | Where-Object {$_.Enabled} | Select-Object -ExpandProperty Name
+    Get-AdComputer -Filter * | Where-Object {$_.Enabled} |
+        Select-Object @{Name='ComputerName';Expression={$_.Name}}
 
 }
 
@@ -258,7 +259,7 @@ function Test-LtRemoteRegistry {
     .INPUTS
     This function consumes ComputerName property from the pipeline.
     .OUTPUTS
-    This function outputs a custom object to the pipeline with the computername, MAC, ClientID, LastContact, and ServerAddress.
+    This function outputs a custom object to the pipeline with the computername, MAC, ClientID, LastContact, ServerAddress, and content from the error log.
     #>
     [CmdletBinding()]
     Param(
@@ -276,6 +277,7 @@ function Test-LtRemoteRegistry {
             'MAC'
             'ClientID'
         )
+        $numLinesErrorLog = 15
     }
 
     Process {
@@ -301,12 +303,20 @@ function Test-LtRemoteRegistry {
                     }
                 }#END Foreach ($Value in $Values)
 
+                $ErrorLog = Try {
+                    Get-Content "\\$($Computer)\c$\windows\ltsvc\lterrors.txt" -ea Stop |
+                        Select-Object -Last $numLinesErrorLog
+                } Catch {
+                    $null
+                }
+
                 [pscustomobject]@{
                     ComputerName = $Computer
                     ServerAddress = $ServerAddress.RegistryValueData
                     LastContact = $LastSuccessStatus.RegistryValueData
                     MAC = $MAC.RegistryValueData
                     ClientID = $ClientID.RegistryValueData
+                    ErrorLog = $ErrorLog
                 }
 
             } else {
@@ -317,3 +327,59 @@ function Test-LtRemoteRegistry {
 
     }#END Process
 }
+
+function Invoke-LtDomainDeployment {
+    <#
+    .SYNOPSIS
+    Leverages AD Computers to deploy a CWA Agent to all devices currently online.
+    #>
+
+    [CmdletBinding()]
+    param(
+        # Location ID Number for the installer
+        [Parameter(Position=0)]
+        [int]
+        $LocationID
+    )
+
+    Begin {
+        $Now = Get-Date
+        $RmmTool = 'https://raw.githubusercontent.com/RFAInc/RfaRmmTools/master/RfaRmmTools.psm1'
+    }
+
+    End {
+
+        # Get computers that are online and do not have working agents
+        $RequiresDeployment = Get-AdEnabledComputers |
+            Test-LtRemoteRegistry |
+            Where-Object {
+                $_.ServerAddress -notlike "*$($global:RfaAutomateServer)*" -or
+                $_.LastContact -lt ($Now.AddMinutes(-5))
+            } |
+            Select-Object -ExpandProperty ComputerName
+
+        if ($RequiresDeployment) {
+            Invoke-Command -AsJob -ComputerName $RequiresDeployment -ScriptBlock {
+                Invoke-Expression (( new-object Net.WebClient ).DownloadString( $RmmTool ))
+                Install-RfaRmmAgent $LocationID
+            } | Wait-Job
+
+            Start-Sleep 10
+
+            $Later = Get-Date
+            $FailedToDeploy = Test-LtRemoteRegistry -ComputerName $RequiresDeployment |
+                Where-Object {
+                    $_.ServerAddress -notlike "*$($global:RfaAutomateServer)*" -or
+                    $_.LastContact -lt ($Later.AddMinutes(-5))
+                } |
+                Select-Object -ExpandProperty ComputerName
+        }
+
+        $End = Get-Date
+
+        Write-Verbose "Deployment completed after $(($End - $Now).TotalMinutes) minutes." -Verbose
+
+    }#END End
+
+}
+#deploy funcitno needs computernames in the error messages. 
