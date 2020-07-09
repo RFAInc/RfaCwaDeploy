@@ -279,27 +279,41 @@ function Test-LtRemoteRegistry {
     }
 
     Process {
+
         Foreach ($Computer in $ComputerName) {
+
             $RegSplat = @{
                 ComputerName = $Computer
                 RegistryHive = 'LocalMachine'
                 RegistryKeyPath = $KeyPath
                 Value = $null
-                ErrorAction = 'SilentlyContinue'
+                ErrorAction = 'Stop'
             }
 
-            Foreach ($Value in $Values) {
-                $RegSplat.Set_Item('Value',$Value)
-                Get-RegistryValueData @RegSplat | New-Variable -Name ($Value.Replace(' ','')) -Force
-            }
+            if (Test-Connection -ComputerName $Computer -Count 2 -Quiet) {
 
-            [pscustomobject]@{
-                ComputerName = $Computer
-                ServerAddress = $ServerAddress.RegistryValueData
-                LastContact = $LastSuccessStatus.RegistryValueData
-                MAC = $MAC.RegistryValueData
-                ClientID = $ClientID.RegistryValueData
-            }
-        }
-    }
+                Foreach ($Value in $Values) {
+                    $RegSplat.Set_Item('Value',$Value)
+                    Try {
+                        Get-RegistryValueData @RegSplat | New-Variable -Name ($Value.Replace(' ','')) -Force
+                    } Catch {
+                        $null | New-Variable -Name ($Value.Replace(' ','')) -Force
+                    }
+                }#END Foreach ($Value in $Values)
+
+                [pscustomobject]@{
+                    ComputerName = $Computer
+                    ServerAddress = $ServerAddress.RegistryValueData
+                    LastContact = $LastSuccessStatus.RegistryValueData
+                    MAC = $MAC.RegistryValueData
+                    ClientID = $ClientID.RegistryValueData
+                }
+
+            } else {
+                Write-Warning "$($Computer) is not responding."
+            }#END if (Test-Connection -ComputerName $Computer -Count 2 -Quiet)
+
+        }#END Foreach ($Computer in $ComputerName)
+
+    }#END Process
 }
