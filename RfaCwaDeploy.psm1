@@ -331,7 +331,13 @@ function Test-LtRemoteRegistry {
 function Invoke-LtDomainDeployment {
     <#
     .SYNOPSIS
+    Deploy Automate agent to all devices in the ADDS domain.
+    .DESCRIPTION
     Leverages AD Computers to deploy a CWA Agent to all devices currently online.
+    .PARAMETER LocationID
+    Location ID Number for the installer
+    .PARAMETER Quiet
+    Suppress output of failed deployments table, if applicable
     #>
 
     [CmdletBinding()]
@@ -339,7 +345,12 @@ function Invoke-LtDomainDeployment {
         # Location ID Number for the installer
         [Parameter(Position=0)]
         [int]
-        $LocationID
+        $LocationID=1,
+
+        # Suppress output of failed deployments table, if applicable
+        [Parameter()]
+        [switch]
+        $Quiet
     )
 
     Begin {
@@ -367,15 +378,21 @@ function Invoke-LtDomainDeployment {
             Start-Sleep 10
 
             $Later = Get-Date
-            $FailedToDeploy = Test-LtRemoteRegistry -ComputerName $RequiresDeployment |
+            $objFailedToDeploy = Test-LtRemoteRegistry -ComputerName $RequiresDeployment |
                 Where-Object {
                     $_.ServerAddress -notlike "*$($global:RfaAutomateServer)*" -or
                     $_.LastContact -lt ($Later.AddMinutes(-5))
-                } |
-                Select-Object -ExpandProperty ComputerName
+                }
         }
 
         $End = Get-Date
+
+        if ($objFailedToDeploy -and -not $Quiet) {
+
+            Write-Output "`nItems which failed to deploy:"
+            $objFailedToDeploy | Format-Table -AutoSize -Wrap
+
+        }
 
         Write-Verbose "Deployment completed after $(($End - $Now).TotalMinutes) minutes." -Verbose
 
