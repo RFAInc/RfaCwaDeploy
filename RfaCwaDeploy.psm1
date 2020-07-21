@@ -7,6 +7,7 @@ $web = New-Object Net.WebClient
 $OtherModules = @(
     $ltposhURL
     'https://raw.githubusercontent.com/tonypags/PsWinAdmin/master/Get-RegistryValueData.ps1'
+    'https://raw.githubusercontent.com/RFAInc/RfaAgentRepair/master/RfaAgentRepair.psm1'
 )
 Foreach ($uri in $OtherModules) {
     $web.DownloadString($uri) | Invoke-Expression
