@@ -118,7 +118,11 @@ function Test-LtInstall {
 
 }
 
-
+function Uninstall-RfaCwaAgent {
+    param()
+    $ltposhURL = $global:ltposhURL
+    Uninstall-LtService -Server $RfaAutomateServer -Force
+}
 
 function Install-RfaCwaAgent {
 
