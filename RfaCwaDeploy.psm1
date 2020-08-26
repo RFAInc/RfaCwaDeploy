@@ -183,7 +183,6 @@ function Install-RfaCwaAgent {
         
             # Already installed, exit no issues
             Write-Output "PASSED: The Automate Agent is already installed."
-            if ( -not $NoWait ) { Start-Sleep 15 }
         
         } else {
         
@@ -206,7 +205,6 @@ function Install-RfaCwaAgent {
         Write-Verbose $vMsg
         Write-Debug $vMsg
         Uninstall-LTService -Server $Server -Force
-        Start-Sleep 60
         
         $InstallRequired = $true
 
@@ -227,10 +225,6 @@ function Install-RfaCwaAgent {
             Write-Verbose $vMsg
             Write-Debug $vMsg
             Install-LTService @InstallSplat -SkipDotNet
-
-        } Finally {
-            
-            if ( -not $NoWait ) { Start-Sleep 90 }
 
         }
 
