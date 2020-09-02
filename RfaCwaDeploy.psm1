@@ -138,6 +138,8 @@ function Install-RfaCwaAgent {
     Location ID as a number
     .PARAMETER NoWait
     Will not pause for 90 seconds after installing (meant for users to review result)
+    .PARAMETER Reinstall
+    Will force an reinstall on any existing installations that are found regardless of current state
     .NOTES
     AUTHOR: Tony Pagliaro (RFA) tpagliaro@rfa.com
     Date: 2019/12/13
@@ -150,7 +152,12 @@ function Install-RfaCwaAgent {
         [int]$LocationID=1,
         
         # Will pause for after installing (meant for users to review result)
-        [switch]$Wait
+        [Parameter()]
+        [switch]$Wait,
+        
+        # Will force an uninstall on any existing installations that are found
+        [Parameter()]
+        [switch]$Reinstall
     )
     
     $vMsg = "Testing current session to ensure we are running as admin."
@@ -184,8 +191,7 @@ function Install-RfaCwaAgent {
         Write-Debug $vMsg
         if (Test-LtInstall -Quiet) {
         
-            # Already installed, exit no issues
-            Write-Output "PASSED: The Automate Agent is already installed."
+            # Already installed, do nothing
         
         } else {
         
@@ -202,7 +208,7 @@ function Install-RfaCwaAgent {
 
 
     # Remove if required
-    if ($UninstallRequired) {
+    if ($UninstallRequired -or $Reinstall) {
 
         $vMsg = "Removing install on $($env:COMPUTERNAME)."
         Write-Verbose $vMsg
