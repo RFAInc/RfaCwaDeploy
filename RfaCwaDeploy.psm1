@@ -207,6 +207,7 @@ function Install-RfaCwaAgent {
         Uninstall-LTService -Server $Server -Force
         
         $InstallRequired = $true
+        Start-Sleep -Seconds 2
 
     }
 
@@ -226,6 +227,8 @@ function Install-RfaCwaAgent {
             Write-Debug $vMsg
             Install-LTService @InstallSplat -SkipDotNet
 
+        } Finally {
+            Start-Sleep -Seconds 5
         }
 
     }
@@ -239,7 +242,7 @@ function Install-RfaCwaAgent {
 
     } else {
 
-        Write-Output ($Error.Exception.Message)
+        Write-Output ($Error[0].Exception.Message)
         Write-Output (Test-LtInstall | Format-List | Out-String)
         if ( $Wait ) { Read-Host "Review Results and Press Enter to exit" }
         Throw "FAILURE: The Automate Agent could not be installed or is not checking in after a minute."
