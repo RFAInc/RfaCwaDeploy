@@ -79,7 +79,7 @@ function Test-LtInstall {
         # Set the "pass" conditions
         $ServerShouldBeLike = '*automate.rfa.com*',
         $LocationShouldBe = $LocationID,
-        $LastContactShouldBeGreaterThan = (Get-Date).AddMinutes(-5),
+        #$LastContactShouldBeGreaterThan = (Get-Date).AddMinutes(-5),
         [switch]$Generic,
         [switch]$Quiet
     )
@@ -102,7 +102,7 @@ function Test-LtInstall {
         
         if (-not ($ServerIs -like $ServerShouldBeLike)) {$TestPass = $false}
         if (-not ($LocationIs -eq $LocationShouldBe)) {$TestPass = $false}
-        if (-not ($LastContactIs -ge $LastContactShouldBeGreaterThan)) {$TestPass = $false}
+        #if (-not ($LastContactIs -ge $LastContactShouldBeGreaterThan)) {$TestPass = $false}
     
     }
     
@@ -146,8 +146,8 @@ function Install-RfaCwaAgent {
         [Parameter(Position=0)]
         [int]$LocationID=1,
         
-        # Will not pause for 90 seconds after installing (meant for users to review result)
-        [switch]$NoWait
+        # Will pause for after installing (meant for users to review result)
+        [switch]$Wait
     )
     
     $vMsg = "Testing current session to ensure we are running as admin."
@@ -235,13 +235,13 @@ function Install-RfaCwaAgent {
     if (Test-LtInstall -Quiet) {
 
         Write-Output "SUCCESS: The Automate Agent was successfully installed."
-        if ( -not $NoWait ) { Start-Sleep 5 }
+        if ( $Wait ) { Read-Host "Review Results and Press Enter to exit" }
 
     } else {
 
         Write-Output ($Error.Exception.Message)
         Write-Output (Test-LtInstall | Format-List | Out-String)
-        if ( -not $NoWait ) { Start-Sleep 5 }
+        if ( $Wait ) { Read-Host "Review Results and Press Enter to exit" }
         Throw "FAILURE: The Automate Agent could not be installed or is not checking in after a minute."
 
     }
