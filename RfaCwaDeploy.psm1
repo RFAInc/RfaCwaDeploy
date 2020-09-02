@@ -97,11 +97,13 @@ function Test-LtInstall {
         $ServerIs = $LTServiceInfo.'Server Address'
         $LocationIs = $LTServiceInfo.LocationID
         $LastContactIs = $LTServiceInfo.LastSuccessStatus -as [datetime]
+        $AgentIdIs = $LTServiceInfo.ID -as [int]
         
         # Test the info vs the conditions
         
         if (-not ($ServerIs -like $ServerShouldBeLike)) {$TestPass = $false}
         if (-not ($LocationIs -eq $LocationShouldBe)) {$TestPass = $false}
+        if (-not ($AgentIdIs -gt 0)) {$TestPass = $false}
         #if (-not ($LastContactIs -ge $LastContactShouldBeGreaterThan)) {$TestPass = $false}
     
     }
@@ -113,6 +115,7 @@ function Test-LtInstall {
             ServerAddress = $ServerIs
             LocationID = $LocationIs
             LastSuccessStatus = $LastContactIs
+            AgentId = $AgentIdIs
         }
     }
 
@@ -242,10 +245,11 @@ function Install-RfaCwaAgent {
 
     } else {
 
+        Throw "FAILURE: The Automate Agent could not be installed or is not checking in yet."
         Write-Output ($Error[0].Exception.Message)
         Write-Output (Test-LtInstall | Format-List | Out-String)
+        Write-Output "Please check the portal manually. See troubleshooting guide if missing: https://rfatech.atlassian.net/wiki/x/BYB8D"
         if ( $Wait ) { Read-Host "Review Results and Press Enter to exit" }
-        Throw "FAILURE: The Automate Agent could not be installed or is not checking in after a minute."
 
     }
 
