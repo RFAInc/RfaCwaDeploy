@@ -77,8 +77,9 @@ function Test-LtInstall {
     #>
     param (
         # Set the "pass" conditions
-        $ServerShouldBeLike = '*automate.rfa.com*',
-        $LocationShouldBe = $LocationID,
+        [string]$ServerShouldBeLike = '*automate.rfa.com*',
+        [int]$LocationShouldBe = $LocationID,
+        [version]$VersionShouldBe = (Get-LtServerVersion),
         #$LastContactShouldBeGreaterThan = (Get-Date).AddMinutes(-5),
         [switch]$Generic,
         [switch]$Quiet
@@ -87,6 +88,7 @@ function Test-LtInstall {
     # Check for existing install
     $TestPass = $true
     $LTServiceInfo = Get-LTServiceInfo -ErrorAction SilentlyContinue
+    [version]$VersionIs = $LTServiceInfo.Version
     
     if ($Generic) {
 
@@ -104,6 +106,7 @@ function Test-LtInstall {
         if (-not ($ServerIs -like $ServerShouldBeLike)) {$TestPass = $false}
         if (-not ($LocationIs -eq $LocationShouldBe)) {$TestPass = $false}
         if (-not ($AgentIdIs -gt 0)) {$TestPass = $false}
+        if (-not ($VersionIs -eq $VersionShouldBe)) {$TestPass = $false}
         #if (-not ($LastContactIs -ge $LastContactShouldBeGreaterThan)) {$TestPass = $false}
     
     }
@@ -115,6 +118,7 @@ function Test-LtInstall {
             ServerAddress = $ServerIs
             LocationID = $LocationIs
             LastSuccessStatus = $LastContactIs
+            Version = $VersionIs
             AgentId = $AgentIdIs
         }
     }
@@ -328,4 +332,15 @@ function Test-LtRemoteRegistry {
         }#END Foreach ($Computer in $ComputerName)
 
     }#END Process
+}
+
+function Get-LtServerVersion {
+    ((New-Object System.Net.WebClient).DownloadString('https://automate.rfa.com/LabTech/Agent.aspx')) -replace '\|'
+}
+
+function Get-LtServiceVersion {
+    # Get version of LtAgent 
+(Get-Item 'C:\Windows\LtSvc\LtSvc.exe').versioninfo |
+    ForEach-Object{($_.FileMajorPart -as [string]) + '.' + ($_.FileMinorPart)}
+
 }
