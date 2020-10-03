@@ -131,6 +131,10 @@ function Uninstall-RfaCwaAgent {
     Uninstall-LtService -Server $RfaAutomateServer -Force
 }
 
+function strDate {
+    (Get-Date).ToString('yyyy-MM-dd_HH:mm:ss:fff')
+}
+
 function Install-RfaCwaAgent {
 
     <#
@@ -140,6 +144,8 @@ function Install-RfaCwaAgent {
     Checks the local system for the Automate agent and verifies if the agent belongs to RFA and not some other MSP. (Re-) installs as needed. Also ensures the agent is checking in after install. 
     .PARAMETER LocationID
     Location ID as a number
+    .PARAMETER LogPath
+    Path to the log file for diaglosing script behavior
     .PARAMETER NoWait
     Will not pause for 90 seconds after installing (meant for users to review result)
     .PARAMETER Reinstall
@@ -155,6 +161,10 @@ function Install-RfaCwaAgent {
         [Parameter(Position=0)]
         [int]$LocationID=1,
         
+        # Path to the log file for diaglosing script behavior
+        [Parameter()]
+        [string]$LogPath='C:\windows\temp\rfaltagent.log',
+        
         # Will pause for after installing (meant for users to review result)
         [Parameter()]
         [switch]$Wait,
@@ -164,7 +174,7 @@ function Install-RfaCwaAgent {
         [switch]$Reinstall
     )
     
-    $vMsg = "Testing current session to ensure we are running as admin."
+    $vMsg = "$(strDate) Testing current session to ensure we are running as admin."
     Write-Verbose $vMsg
     Write-Debug $vMsg
     Confirm-RequiresAdmin
@@ -184,15 +194,17 @@ function Install-RfaCwaAgent {
 
 
     # Check for existing install
-    $vMsg = "Testing $($env:COMPUTERNAME) for existing install."
+    $vMsg = "$(strDate) Testing $($env:COMPUTERNAME) for existing install."
     Write-Verbose $vMsg
     Write-Debug $vMsg
+    $vMsg | Out-File $LogPath -Append
     if (Test-LtInstall -Generic -Quiet) {
 
         # Test is the agent is checking into correct server/location
-        $vMsg = "Checking if current install on $($env:COMPUTERNAME) points to $($global:RfaAutomateServer)."
+        $vMsg = "$(strDate) Checking if current install on $($env:COMPUTERNAME) points to $($global:RfaAutomateServer)."
         Write-Verbose $vMsg
         Write-Debug $vMsg
+        $vMsg | Out-File $LogPath -Append
         if (Test-LtInstall -Quiet) {
         
             # Already installed, do nothing
@@ -214,9 +226,10 @@ function Install-RfaCwaAgent {
     # Remove if required
     if ($UninstallRequired -or $Reinstall) {
 
-        $vMsg = "Removing install on $($env:COMPUTERNAME)."
+        $vMsg = "$(strDate) Removing install on $($env:COMPUTERNAME)."
         Write-Verbose $vMsg
         Write-Debug $vMsg
+        $vMsg | Out-File $LogPath -Append
         Uninstall-LTService -Server $Server -Force
         
         $InstallRequired = $true
@@ -228,16 +241,18 @@ function Install-RfaCwaAgent {
 
         Try{
 
-            $vMsg = "Installing on $($env:COMPUTERNAME)."
+            $vMsg = "$(strDate) Installing on $($env:COMPUTERNAME)."
             Write-Verbose $vMsg
             Write-Debug $vMsg
+            $vMsg | Out-File $LogPath -Append
             Install-LTService @InstallSplat -ea stop
 
         } Catch {
 
-            $vMsg = "Retrying install on $($env:COMPUTERNAME), skipping .Net validation."
+            $vMsg = "$(strDate) Retrying install on $($env:COMPUTERNAME), skipping .Net validation."
             Write-Verbose $vMsg
             Write-Debug $vMsg
+            $vMsg | Out-File $LogPath -Append
             Install-LTService @InstallSplat -SkipDotNet
 
         } Finally {
