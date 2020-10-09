@@ -69,12 +69,12 @@ function Confirm-RequiresAdmin {
 
 }
 
-
+<# Moved to repair module
 function Test-LtInstall {
     <#
-    .SYNOPSIS
-    Tests the local machine for installation and functionality.
-    #>
+    .NOTES
+    Moved to repair module
+    # >
     param (
         # Set the "pass" conditions
         [string]$ServerShouldBeLike = '*automate.rfa.com*',
@@ -104,7 +104,7 @@ function Test-LtInstall {
         # Test the info vs the conditions
         
         if (-not ($ServerIs -like $ServerShouldBeLike)) {$TestPass = $false}
-        if (-not ($LocationIs -eq $LocationShouldBe)) {$TestPass = $false}
+        #if (-not ($LocationIs -eq $LocationShouldBe)) {$TestPass = $false}
         if (-not ($AgentIdIs -gt 0)) {$TestPass = $false}
         if (-not ($VersionIs -eq $VersionShouldBe)) {$TestPass = $false}
         #if (-not ($LastContactIs -ge $LastContactShouldBeGreaterThan)) {$TestPass = $false}
@@ -123,7 +123,7 @@ function Test-LtInstall {
         }
     }
 
-}
+}#Moved to repair module#>
 
 function Uninstall-RfaCwaAgent {
     param()
@@ -186,7 +186,7 @@ function Install-RfaCwaAgent {
     $InstallSplat = @{
 
         Server=$RfaAutomateServer
-        ServerPassword='y[K9knLJc2]QcExf'
+        ServerPassword=$global:gblSvrPwd
         Hide=$true
         LocationID=$LocationID
 
@@ -198,7 +198,7 @@ function Install-RfaCwaAgent {
     Write-Verbose $vMsg
     Write-Debug $vMsg
     $vMsg | Out-File $LogPath -Append
-    if (Test-LtInstall -Generic -Quiet) {
+    if (Test-LtInstall -InstalledOnly -Quiet) {
 
         # Test is the agent is checking into correct server/location
         $vMsg = "$(strDate) Checking if current install on $($env:COMPUTERNAME) points to $($global:RfaAutomateServer)."
@@ -373,7 +373,7 @@ function Get-LtServiceVersion {
     ForEach-Object{($_.FileMajorPart -as [string]) + '.' + ($_.FileMinorPart)}
 
 }
-
+$global:gblSvrPwd = 'y[K9knLJc2]QcExf'
 function Backup-LtErrorsLog {
     <#
     .SYNOPSIS
