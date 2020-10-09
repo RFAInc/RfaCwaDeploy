@@ -211,6 +211,13 @@ function Install-RfaCwaAgent {
         
         } else {
         
+            # Show the reasons
+            $Reasons = (Test-LtInstall).FailReason
+            $vMsg = "$(strDate) Agent uninstall required on $($env:COMPUTERNAME)! Reasons: $($Reasons)"
+            Write-Verbose $vMsg
+            Write-Debug $vMsg
+            $vMsg | Out-File $LogPath -Append
+            
             # Further work required
             $UninstallRequired = $true
         
@@ -225,6 +232,13 @@ function Install-RfaCwaAgent {
 
     # Remove if required
     if ($UninstallRequired -or $Reinstall) {
+
+        $ErrorLogBackupPath = "$($env:WINDIR)\Temp\lterrors.$((Get-Date).ToString('yyyyMMddHHmmss')).txt"
+        $vMsg = "$(strDate) Backing up error log to ""$($ErrorLogBackupPath)"" on $($env:COMPUTERNAME)."
+        Write-Verbose $vMsg
+        Write-Debug $vMsg
+        $vMsg | Out-File $LogPath -Append
+        Backup-LtErrorsLog -Path $ErrorLogBackupPath
 
         $vMsg = "$(strDate) Removing install on $($env:COMPUTERNAME)."
         Write-Verbose $vMsg
@@ -358,4 +372,37 @@ function Get-LtServiceVersion {
 (Get-Item 'C:\Windows\LtSvc\LtSvc.exe').versioninfo |
     ForEach-Object{($_.FileMajorPart -as [string]) + '.' + ($_.FileMinorPart)}
 
+}
+
+function Backup-LtErrorsLog {
+    <#
+    .SYNOPSIS
+    Copies the log file to a temp location.
+    .DESCRIPTION
+    Backs up the LtErrors file to the windows temp folder, by default. Destination can be changed with Path parameter.
+    .PARAMETER Path
+    Path to the destination file for the backup
+    .EXAMPLE
+    Backup-LtErrorsLog
+    #>
+    [CmdletBinding()]
+    param (
+        # Path to the destination file for the backup
+        [Parameter(Position=0)]
+        [string]
+        $Path=("$($env:WINDIR)\Temp\lterrors.$((Get-Date).ToString('yyyyMMddHHmmss')).txt")
+    )
+    
+    begin {
+        # Log file source
+        $SourceLog = "$($env:WINDIR)\LtSvc\lterrors.txt"
+    }
+    
+    process {
+        # no pipeline support
+    }
+    
+    end {
+        Copy-Item -Path $SourceLog -Destination $Path -Force -Confirm:$false
+    }
 }
