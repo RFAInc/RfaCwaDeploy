@@ -72,8 +72,8 @@ function Confirm-RequiresAdmin {
 <# Moved to repair module
 function Test-LtInstall {
     <#
-    .NOTES
-    Moved to repair module
+    #.NOTES
+    #Moved to repair module
     # >
     param (
         # Set the "pass" conditions
